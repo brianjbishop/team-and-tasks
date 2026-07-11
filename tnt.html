@@ -61,6 +61,7 @@
   .task-title{flex:1; border:none; background:transparent; font-size:15px; font-weight:600; padding:4px 4px;}
   .chips-mini{display:flex; margin-left:2px;}
   .avatar{width:22px; height:22px; border-radius:50%; display:block; text-align:center; line-height:18px; font-size:10px; font-weight:600; color:#fff; border:2px solid var(--card); margin-left:-6px;}
+  .avatar span, .export-dot span{position:relative; top:-1.5px;}
   .date-badge{font-size:12px; padding:3px 9px; border-radius:6px; flex-shrink:0; white-space:nowrap; font-weight:500;}
   .task-actions{display:flex; gap:2px; flex-shrink:0;}
   .task-body{padding:0 16px 16px;}
@@ -820,7 +821,26 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
   function buildExportAvatars(ids){
     var wrap = document.createElement('div');
     wrap.style.cssText = 'display:flex; flex-shrink:0;';
-    renderAvatars(wrap, ids);
+    var shown = ids.slice(0,4);
+    shown.forEach(function(id){
+      var p = personById(id);
+      if(!p) return;
+      var av = document.createElement('div');
+      av.className = 'avatar';
+      av.style.background = PERSON_COLORS[p.color].fill;
+      var span = document.createElement('span');
+      span.textContent = initials(p.name);
+      av.appendChild(span);
+      wrap.appendChild(av);
+    });
+    if(ids.length>4){
+      var more = document.createElement('div');
+      more.className = 'avatar'; more.style.background = '#787774';
+      var moreSpan = document.createElement('span');
+      moreSpan.textContent = '+'+(ids.length-4);
+      more.appendChild(moreSpan);
+      wrap.appendChild(more);
+    }
     return wrap;
   }
 
@@ -900,8 +920,11 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
     var head = document.createElement('div');
     head.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:14px;';
     var dot = document.createElement('div');
+    dot.className = 'export-dot';
     dot.style.cssText = 'width:20px; height:20px; border-radius:50%; background:'+pc.fill+'; flex-shrink:0; display:block; text-align:center; line-height:20px; color:#fff; font-size:10px; font-weight:700;';
-    dot.textContent = initials(person.name);
+    var dotSpan = document.createElement('span');
+    dotSpan.textContent = initials(person.name);
+    dot.appendChild(dotSpan);
     var h = document.createElement('div'); h.style.cssText = 'font-size:18px; font-weight:700;'; h.textContent = person.name;
     head.appendChild(dot); head.appendChild(h);
     card.appendChild(head);
