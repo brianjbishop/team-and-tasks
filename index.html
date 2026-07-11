@@ -812,7 +812,7 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
     var card = document.createElement('div');
     card.style.cssText = 'width:520px; background:#FFFFFF; border:1.5px solid '+c.fill+'; border-radius:12px; padding:20px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:#37352F;';
     var head = document.createElement('div');
-    head.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:14px;';
+    head.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:16px;';
     var dot = document.createElement('div');
     dot.style.cssText = 'width:14px; height:14px; border-radius:50%; background:'+c.fill+'; flex-shrink:0;';
     var h = document.createElement('div'); h.style.cssText = 'font-size:18px; font-weight:700;'; h.textContent = title;
@@ -826,10 +826,35 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
       lines.forEach(function(line){
         var rowColor = line.color || c;
         var row = document.createElement('div');
-        row.style.cssText = 'font-size:13px; padding:9px 11px; border-radius:6px; background:'+rowColor.bg+'; color:'+rowColor.text+'; margin-bottom:6px; display:flex; justify-content:space-between; gap:10px; align-items:center;';
-        var t = document.createElement('span'); t.textContent = line.text;
-        var s = document.createElement('span'); s.style.cssText = 'font-weight:600; font-size:11px; white-space:nowrap; flex-shrink:0;'; s.textContent = STATUS_LABEL[line.status];
-        row.appendChild(t); row.appendChild(s);
+        row.style.cssText = 'margin-bottom:12px;';
+
+        var label = document.createElement('div');
+        label.style.cssText = 'font-size:13px; color:#37352F; margin-bottom:5px; padding:0 1px;';
+        label.textContent = line.label;
+        row.appendChild(label);
+
+        var pillTrack = document.createElement('div');
+        pillTrack.style.cssText = 'position:relative; height:30px; background:#F7F7F5; border:1px solid #E9E9E7; border-radius:8px; padding:2px;';
+        var pill = document.createElement('div');
+        pill.style.cssText = 'height:24px; border-radius:6px; background:'+rowColor.fill+'; box-shadow:0 1px 2px rgba(15,15,15,0.08); display:flex; align-items:center; justify-content:space-between; padding:0 8px; gap:8px;';
+
+        var iconWrap = document.createElement('span');
+        iconWrap.style.cssText = 'display:flex; align-items:center; justify-content:center; flex-shrink:0;';
+        iconWrap.innerHTML = statusIconSVG(line.status);
+        pill.appendChild(iconWrap);
+
+        var dateText = document.createElement('span');
+        dateText.style.cssText = 'font-size:11px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
+        dateText.textContent = fmtDay(line.start)+' – '+fmtDay(line.end);
+        pill.appendChild(dateText);
+
+        var statusChip = document.createElement('span');
+        statusChip.style.cssText = 'font-size:10px; font-weight:700; color:#fff; opacity:0.9; white-space:nowrap; flex-shrink:0;';
+        statusChip.textContent = STATUS_LABEL[line.status];
+        pill.appendChild(statusChip);
+
+        pillTrack.appendChild(pill);
+        row.appendChild(pillTrack);
         card.appendChild(row);
       });
     }
@@ -848,7 +873,7 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
     tasks.forEach(function(t){
       var lines = t.subtasks.map(function(s){
         var names = s.assignees.map(function(id){ var p=personById(id); return p?p.name:null; }).filter(Boolean).join(' + ') || 'Unassigned';
-        return {text: s.label+' ('+names+') · '+fmtDay(s.start)+' – '+fmtDay(s.end), status: s.status};
+        return {label: s.label+' ('+names+')', start: s.start, end: s.end, status: s.status};
       });
       var card = buildExportCard(t.label, COLORS[t.color], lines);
       container.appendChild(card);
@@ -856,7 +881,7 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
     });
     team.forEach(function(p){
       var lines = personSubtasks(p.id).map(function(entry){
-        return {text: entry.taskLabel+' — '+entry.sub.label+' · '+fmtDay(entry.sub.start)+' – '+fmtDay(entry.sub.end), status: entry.sub.status, color: COLORS[entry.taskColor]};
+        return {label: entry.taskLabel+' — '+entry.sub.label, start: entry.sub.start, end: entry.sub.end, status: entry.sub.status, color: COLORS[entry.taskColor]};
       });
       var card = buildExportCard(p.name, PERSON_COLORS[p.color], lines);
       container.appendChild(card);
@@ -879,7 +904,7 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
       return zip.generateAsync({type:'blob'});
     }).then(function(blob){
       var link = document.createElement('a');
-      link.download = 'event-cards.zip';
+      link.download = safeFileName(document.getElementById('plan-title').value || 'plan') + '-tnt.zip';
       link.href = URL.createObjectURL(blob);
       link.click();
       btn.title = origTitle; btn.disabled = false;
