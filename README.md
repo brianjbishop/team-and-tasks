@@ -1,0 +1,21 @@
+# team-and-tasks (tnt)
+
+A single-file, no-install team planning tool: a Notion-style Gantt chart for tracking who is doing what and by when. The name is the idea. tnt is the small charge that gets a stuck project moving, the dynamite that turns a pile of tasks and a loose team into something that actually ships.
+
+Open index.html in any browser, nothing to build, nothing to install. Or use the live version via GitHub Pages once it is enabled on this repo.
+
+## Features
+
+A task to subtask hierarchy with collapsible groups. Draggable timeline pills, where you can drag either edge to resize, drag the middle to move, or drag the date labels directly. Multi person assignment per subtask, rolled up to the task level. Per task and per person color coding, with a hover triggered color picker. A dedicated Team section where each person expands into a rollup of everything they are responsible for. Status tracking, to do, in progress, or done, that cycles from a click on the timeline pill, with a live percent complete stat. Drag and drop reordering for both subtasks and team members. Save and Load a plan as JSON, so state including colors and status round trips exactly. Copy the plan as plain text, or export every task and person as a PNG card bundled into a zip.
+
+## Why
+
+Built for coordinating a small event setup team across a handful of workstreams, where a normal shared doc or spreadsheet gets unwieldy fast but a full project management tool is overkill. It is a single HTML file on purpose. Easy to share, easy to fork, easy to keep forever.
+
+## Development history
+
+This tool went through three real stages, reflected in the commit history. First, a prototype: a flat task list grouped by category, with a pair of range sliders per row to set start and end dates. Second, a task and subtask hierarchy: restructured into collapsible task cards containing addable and editable subtasks, with a dynamic team list. Third, the current version: a full redesign with draggable timeline pills instead of sliders, multi person assignment with team level rollups, status tracking, per person and per task color coding, save and load, and export to card images.
+
+## License
+
+MIT, see LICENSE.
