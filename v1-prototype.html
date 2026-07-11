@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Event setup plan</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:#fafafa; margin:0; padding:32px;}
+  h1{font-size:22px; margin-bottom:4px;}
+  .team{display:flex; gap:8px; margin:16px 0 24px;}
+  .team input{border:1px solid #ddd; border-radius:6px; padding:6px 8px; width:120px;}
+  .category{font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#666; margin:20px 0 8px;}
+  .row{display:grid; grid-template-columns:280px 1fr 90px; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid #eee;}
+  .row .label{font-size:14px;}
+  .row .bar-wrap{position:relative; height:10px; background:#eee; border-radius:5px;}
+  .row .bar{position:absolute; top:0; height:10px; border-radius:5px; background:#4f7cff;}
+  .row .sliders{display:flex; gap:6px; align-items:center;}
+  .row input[type=range]{width:100%;}
+  .row .assignee select{font-size:12px;}
+  button{margin-top:20px; padding:8px 14px; border:1px solid #ccc; border-radius:6px; background:#fff; cursor:pointer;}
+</style>
+</head>
+<body>
+  <h1>Event setup plan</h1>
+  <div class="team" id="team"></div>
+  <div id="list"></div>
+  <button id="copy-btn">Copy plan as text</button>
+
+<script>
+// First pass at the planner: flat task list grouped by category, with a pair of
+// range sliders per row to set start/end day, and a small bar to visualize it.
+// Team members are just four fixed name inputs for now.
+var CATEGORIES = ['Venue', 'Program and content', 'Audience and guests', 'Marketing and assets', 'Logistics and day-of'];
+var team = ['TBD 1', 'TBD 2', 'TBD 3', 'TBD 4'];
+var totalDays = 30;
+
+var tasks = [
+  { cat: 'Venue', label: 'Outreach to candidate venues', s: 0, e: 3, team: 0 },
+  { cat: 'Venue', label: 'Hold NYU Garage as backup', s: 0, e: 5, team: 0 },
+  { cat: 'Venue', label: 'Collect and compare quotes', s: 4, e: 8, team: 1 },
+  { cat: 'Program and content', label: 'Build film shortlist', s: 4, e: 14, team: 2 },
+  { cat: 'Program and content', label: 'Confirm program order', s: 14, e: 20, team: 0 },
+  { cat: 'Audience and guests', label: 'Determine audience profiles', s: 3, e: 9, team: 3 },
+  { cat: 'Marketing and assets', label: 'Design marketing assets', s: 6, e: 16, team: 1 },
+  { cat: 'Logistics and day-of', label: 'Assign day-of roles', s: 20, e: 25, team: 0 },
+];
+
+function renderTeam(){
+  var wrap = document.getElementById('team');
+  wrap.innerHTML = '';
+  team.forEach(function(name, i){
+    var input = document.createElement('input');
+    input.value = name;
+    input.addEventListener('input', function(){ team[i] = input.value; render(); });
+    wrap.appendChild(input);
+  });
+}
+
+function render(){
+  var list = document.getElementById('list');
+  list.innerHTML = '';
+  CATEGORIES.forEach(function(cat){
+    var group = tasks.filter(function(t){ return t.cat === cat; });
+    if(!group.length) return;
+    var h = document.createElement('div');
+    h.className = 'category';
+    h.textContent = cat;
+    list.appendChild(h);
+    group.forEach(function(t){
+      var row = document.createElement('div');
+      row.className = 'row';
+
+      var label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = t.label;
+
+      var barWrap = document.createElement('div');
+      barWrap.className = 'bar-wrap';
+      var bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.left = (t.s / totalDays * 100) + '%';
+      bar.style.width = Math.max((t.e - t.s) / totalDays * 100, 3) + '%';
+      barWrap.appendChild(bar);
+
+      var sliders = document.createElement('div');
+      sliders.className = 'sliders';
+      var startSlider = document.createElement('input');
+      startSlider.type = 'range'; startSlider.min = 0; startSlider.max = totalDays; startSlider.value = t.s;
+      var endSlider = document.createElement('input');
+      endSlider.type = 'range'; endSlider.min = 0; endSlider.max = totalDays; endSlider.value = t.e;
+      startSlider.addEventListener('input', function(){
+        t.s = Math.min(Number(startSlider.value), t.e);
+        bar.style.left = (t.s / totalDays * 100) + '%';
+        bar.style.width = Math.max((t.e - t.s) / totalDays * 100, 3) + '%';
+      });
+      endSlider.addEventListener('input', function(){
+        t.e = Math.max(Number(endSlider.value), t.s);
+        bar.style.width = Math.max((t.e - t.s) / totalDays * 100, 3) + '%';
+      });
+      sliders.appendChild(startSlider);
+      sliders.appendChild(endSlider);
+
+      var assignee = document.createElement('div');
+      assignee.className = 'assignee';
+      var select = document.createElement('select');
+      team.forEach(function(name, i){
+        var opt = document.createElement('option');
+        opt.value = i; opt.textContent = name;
+        if(i === t.team) opt.selected = true;
+        select.appendChild(opt);
+      });
+      select.addEventListener('change', function(){ t.team = Number(select.value); });
+      assignee.appendChild(select);
+
+      row.appendChild(label);
+      var mid = document.createElement('div');
+      mid.appendChild(barWrap);
+      mid.appendChild(sliders);
+      row.appendChild(mid);
+      row.appendChild(assignee);
+      list.appendChild(row);
+    });
+  });
+}
+
+document.getElementById('copy-btn').addEventListener('click', function(){
+  var lines = [];
+  CATEGORIES.forEach(function(cat){
+    var group = tasks.filter(function(t){ return t.cat === cat; });
+    if(!group.length) return;
+    lines.push(cat.toUpperCase());
+    group.forEach(function(t){
+      lines.push('- [' + team[t.team] + '] ' + t.label + ' (day ' + t.s + ' to ' + t.e + ')');
+    });
+  });
+  if(navigator.clipboard) navigator.clipboard.writeText(lines.join('\n'));
+});
+
+renderTeam();
+render();
+</script>
+</body>
+</html>
