@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title id="doc-title">Untitled plan</title>
+<style>
+  :root{
+    --bg:#F7F7F5; --card:#FFFFFF; --border:#E9E9E7; --border-strong:#DCDCD9;
+    --text:#37352F; --text-secondary:#787774; --text-muted:#9B9A97;
+    --accent:#2383E2; --accent-bg:#DDEBF1; --radius:8px;
+    --shadow:0 1px 2px rgba(15,15,15,0.04), 0 1px 1px rgba(15,15,15,0.03);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:14px; line-height:1.5;
+  }
+  .page{max-width:860px; margin:0 auto; padding:40px 28px 80px;}
+  input,textarea,select,button{font-family:inherit; font-size:14px; color:var(--text);}
+  .title-input{
+    font-size:28px; font-weight:600; border:none; background:transparent; width:100%;
+    padding:2px 0; margin-bottom:4px;
+  }
+  .title-input:focus, .plain-input:focus{outline:none; box-shadow:0 0 0 2px var(--accent-bg);}
+  .subrow{display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:22px; color:var(--text-secondary); font-size:13px;}
+  .subrow label{display:flex; align-items:center; gap:6px;}
+  .subrow input[type=date], .subrow input[type=text]{
+    border:1px solid var(--border); border-radius:6px; padding:4px 8px; background:var(--card);
+  }
+  .stats{display:flex; gap:10px; margin-bottom:26px;}
+  .stat{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px; flex:1; box-shadow:var(--shadow);}
+  .stat .label{font-size:12px; color:var(--text-muted);}
+  .stat .value{font-size:16px; font-weight:600; margin-top:2px;}
+  .section-label{font-size:12px; color:var(--text-muted); margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+  .section-label.collapsible{cursor:pointer; display:flex; align-items:center; gap:6px; user-select:none;}
+  .chev-sm{font-size:13px; color:var(--text-muted); width:14px; text-align:center; flex-shrink:0; display:inline-block;}
+  .team-wrap{display:flex; flex-direction:column; gap:6px; margin-bottom:16px;}
+  .person-card{background:var(--card); border:1px solid var(--border); border-radius:8px;}
+  .person-header{display:flex; align-items:center; gap:8px; padding:8px 10px; cursor:pointer;}
+  .person-name{flex:1; border:none; background:transparent; font-weight:500; padding:2px 4px;}
+  .person-count{font-size:12px; color:var(--text-muted); white-space:nowrap; flex-shrink:0;}
+  .person-rollup{padding:0 10px 10px 32px; display:flex; flex-direction:column; gap:4px;}
+  .rollup-item{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; padding:6px 9px; border-radius:6px;}
+  .rollup-empty{font-size:12px; color:var(--text-muted); padding:4px 0;}
+  .status-select{border:1px solid rgba(0,0,0,0.12); border-radius:6px; font-size:11px; padding:2px 4px; background:rgba(255,255,255,0.6); flex-shrink:0; cursor:pointer;}
+  .add-name-btn{margin-top:2px; align-self:flex-start;}
+  .icon-btn{border:none; background:transparent; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-muted); flex-shrink:0;}
+  .icon-btn:hover{background:var(--bg);}
+  .btn{border:1px solid var(--border-strong); background:var(--card); border-radius:6px; padding:7px 13px; cursor:pointer; font-weight:500; box-shadow:var(--shadow);}
+  .btn:hover{background:var(--bg);}
+  .btn.primary{background:var(--text); color:#fff; border-color:var(--text);}
+  .btn.subtle{border:none; box-shadow:none; background:transparent; color:var(--text-secondary); padding:4px 8px;}
+  .btn.subtle:hover{background:var(--bg); color:var(--text);}
+  .btn.danger-text{color:#C4554D;}
+  .task-card{background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; box-shadow:var(--shadow); overflow:visible;}
+  .task-header{display:flex; align-items:center; gap:10px; padding:14px 16px; cursor:pointer; position:relative;}
+  .chev{font-size:16px; color:var(--text-muted); flex-shrink:0; width:16px; text-align:center;}
+  .color-dot{width:14px; height:14px; border-radius:50%; flex-shrink:0; cursor:pointer; border:2px solid rgba(0,0,0,0.06);}
+  .task-title{flex:1; border:none; background:transparent; font-size:15px; font-weight:600; padding:4px 4px;}
+  .chips-mini{display:flex; margin-left:2px;}
+  .avatar{width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color:#fff; border:2px solid var(--card); margin-left:-6px;}
+  .date-badge{font-size:12px; padding:3px 9px; border-radius:6px; flex-shrink:0; white-space:nowrap; font-weight:500;}
+  .task-actions{display:flex; gap:2px; flex-shrink:0;}
+  .task-body{padding:0 16px 16px;}
+  .desc-box{width:100%; border:1px solid var(--border); border-radius:8px; background:var(--bg); padding:10px 12px; resize:vertical; min-height:44px; color:var(--text-secondary); margin-bottom:14px;}
+  .desc-label{font-size:11px; color:var(--text-muted); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+  .subtask-row{background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 10px 12px; margin-bottom:8px; cursor:grab;}
+  .subtask-row.drag-over-top{border-top:2px solid var(--accent);}
+  .subtask-row.drag-over-bottom{border-bottom:2px solid var(--accent);}
+  .sub-line1{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .grip{color:var(--text-muted); font-size:13px; letter-spacing:1px; flex-shrink:0; user-select:none;}
+  .sub-title{flex:1; border:none; background:transparent; font-size:13px; padding:3px 4px;}
+  .assignee-trigger{display:flex; align-items:center; cursor:pointer; padding:2px 4px; border-radius:6px;}
+  .assignee-trigger:hover{background:var(--card);}
+  .track{position:relative; height:34px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin:6px 0 4px; overflow:visible;}
+  .pill{position:absolute; top:3px; height:26px; border-radius:6px; cursor:grab; box-shadow:var(--shadow);}
+  .pill:active{cursor:grabbing;}
+  .status-icon{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:16px; height:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .pill-dates-row{position:relative; height:15px; margin-top:3px;}
+  .pill-date-label{position:absolute; top:0; font-size:11px; color:var(--text-muted); white-space:nowrap; cursor:ew-resize;}
+  .pill-date-start{padding-right:6px;}
+  .pill-date-end{padding-left:6px;}
+  .task-title:focus, .sub-title:focus, .person-name:focus, .desc-box:focus{outline:none;}
+  .popover{position:absolute; z-index:50; background:var(--card); border:1px solid var(--border); border-radius:8px; box-shadow:0 4px 14px rgba(15,15,15,0.12); padding:8px;}
+  .swatch-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px;}
+  .swatch{width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px; font-weight:700;}
+  .swatch.active{border-color:var(--text);}
+  .assignee-list{min-width:160px;}
+  .assignee-list label{display:flex; align-items:center; gap:8px; padding:5px 4px; cursor:pointer; border-radius:6px; font-size:13px;}
+  .assignee-list label:hover{background:var(--bg);}
+  .global-actions{display:flex; justify-content:space-between; gap:10px; margin-top:22px; flex-wrap:wrap;}
+  .global-actions .left, .global-actions .right{display:flex; gap:8px; flex-wrap:wrap;}
+  .icon-toolbar{display:flex; gap:8px;}
+  .icon-toolbar-btn{width:40px; height:40px; border:1px solid var(--border-strong); border-radius:8px; background:var(--card); box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text);}
+  .icon-toolbar-btn:hover{background:var(--bg);}
+  .icon-toolbar-btn:disabled{opacity:0.5; cursor:default; background:var(--card);}
+  @media print{
+    body{background:#fff;}
+    .no-print{display:none !important;}
+    .task-card{box-shadow:none; break-inside:avoid; border:1px solid #ccc;}
+    input,textarea,select{border:none !important; background:transparent !important; box-shadow:none !important;}
+    .page{max-width:100%; padding:20px;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <input id="plan-title" class="title-input" value="Untitled plan"/>
+  <div class="subrow">
+    <label>Start <input id="plan-start" type="date" value="2026-07-11"></label>
+    <label>Event day <input id="plan-end" type="date" value="2026-08-10"></label>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="label">Plan starts</div><div class="value" id="stat-start">-</div></div>
+    <div class="stat"><div class="label">Event day</div><div class="value" id="stat-end">-</div></div>
+    <div class="stat"><div class="label">Days to plan</div><div class="value" id="stat-days">-</div></div>
+    <div class="stat"><div class="label">% complete</div><div class="value" id="stat-complete">-</div></div>
+  </div>
+
+  <div class="section-label collapsible" id="team-toggle"><span class="chev-sm" id="team-chev">⌄</span>Team</div>
+  <div class="team-wrap" id="team-wrap"></div>
+
+  <div class="section-label collapsible" id="tasks-toggle"><span class="chev-sm" id="tasks-chev">⌄</span>Tasks</div>
+  <div id="task-list"></div>
+
+  <div class="global-actions no-print">
+    <div class="left">
+      <button class="btn" id="add-task-btn">+ Add task</button>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:24px;">Save &amp; load</div>
+  <div class="icon-toolbar no-print">
+    <button class="icon-toolbar-btn" id="save-plan-btn" title="Save plan (.json)">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v9"/><path d="M6.5 8.5L10 12l3.5-3.5"/><path d="M4 14.5v1a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
+    </button>
+    <button class="icon-toolbar-btn" id="load-plan-btn" title="Load plan (.json)">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12V3"/><path d="M6.5 6.5L10 3l3.5 3.5"/><path d="M4 14.5v1a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
+    </button>
+    <button class="icon-toolbar-btn" id="copy-btn" title="Copy plan as text">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="9" height="9" rx="1.5"/><path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-7A1.5 1.5 0 0 0 3 5.5v7A1.5 1.5 0 0 0 4.5 14H6"/></svg>
+    </button>
+    <button class="icon-toolbar-btn" id="cards-btn" title="Save images (.zip)">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="12" rx="1.5"/><circle cx="7.5" cy="8.5" r="1.25"/><path d="M17 13l-4-4-5 5"/></svg>
+    </button>
+    <input type="file" id="load-plan-input" accept="application/json" style="display:none">
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function(){
+  var COLORS = {
+    gray:{fill:'#9B9A97', bg:'#F1F1EF', text:'#5A5A57'},
+    brown:{fill:'#A27B5C', bg:'#EEE0DA', text:'#6B4E37'},
+    orange:{fill:'#D9730D', bg:'#FAEBDD', text:'#8A4A08'},
+    yellow:{fill:'#CB9800', bg:'#FBF3DB', text:'#8A6800'},
+    green:{fill:'#0F7B6C', bg:'#DDEDEA', text:'#0B5C50'},
+    blue:{fill:'#0B6E99', bg:'#DDEBF1', text:'#0A5578'},
+    purple:{fill:'#6940A5', bg:'#EAE4F2', text:'#4F3080'},
+    pink:{fill:'#AD1A72', bg:'#F4DFEB', text:'#821457'},
+    red:{fill:'#C4554D', bg:'#FBE4E4', text:'#93332D'},
+    teal:{fill:'#0C8599', bg:'#D3F0F3', text:'#08636F'},
+    cyan:{fill:'#15AABF', bg:'#D3F5F8', text:'#0E7C8D'},
+    indigo:{fill:'#4263EB', bg:'#DDE3FC', text:'#2F49B8'},
+    lime:{fill:'#74B816', bg:'#E9F6D6', text:'#548A0C'},
+    magenta:{fill:'#AE3EC9', bg:'#F3DDF7', text:'#832E97'},
+    slate:{fill:'#495057', bg:'#E3E5E7', text:'#343A40'}
+  };
+  var colorOrder = Object.keys(COLORS);
+
+  var PERSON_COLORS = {
+    coral:{fill:'#FF6B6B', bg:'#FFE3E3', text:'#C92A2A'},
+    amber:{fill:'#F59F00', bg:'#FFF3BF', text:'#B08900'},
+    sage:{fill:'#5C940D', bg:'#E9FAC8', text:'#3F6212'},
+    mint:{fill:'#12B886', bg:'#C3FAE8', text:'#0B7A5C'},
+    sky:{fill:'#228BE6', bg:'#D0EBFF', text:'#1864AB'},
+    denim:{fill:'#364FC7', bg:'#DBE4FF', text:'#2438A0'},
+    plum:{fill:'#9C36B5', bg:'#F3D9FA', text:'#7A2A8F'},
+    berry:{fill:'#E64980', bg:'#FFDEEB', text:'#B33A66'},
+    clay:{fill:'#BF6A3B', bg:'#F5DFC8', text:'#8C4E2A'},
+    slateblue:{fill:'#5F6B8A', bg:'#E1E4EC', text:'#3E4763'}
+  };
+  var personColorOrder = Object.keys(PERSON_COLORS);
+  var teamCollapsed = false, tasksCollapsed = false;
+
+  function wireCardFocus(el, fillColor){
+    el.addEventListener('focus', function(){ el.style.boxShadow = '0 0 0 2px ' + fillColor + '4D'; });
+    el.addEventListener('blur', function(){ el.style.boxShadow = ''; });
+  }
+
+  function positionSubtaskDates(dS, dE, datesRow, cardEl, leftPct, widthPct){
+    var PAD = 6, GAP = 8;
+    dS.style.right = 'calc(100% - ' + leftPct + '%)';
+    dS.style.left = 'auto';
+    dS.style.textAlign = 'right';
+    dE.style.left = (leftPct + widthPct) + '%';
+    dE.style.right = 'auto';
+    dE.style.textAlign = 'left';
+
+    var cardRect = cardEl.getBoundingClientRect();
+    var dSRect = dS.getBoundingClientRect();
+    if(dSRect.left < cardRect.left + PAD){
+      dS.style.right = 'auto';
+      dS.style.left = PAD + 'px';
+      dS.style.textAlign = 'left';
+    }
+    var dERect = dE.getBoundingClientRect();
+    if(dERect.right > cardRect.right - PAD){
+      dE.style.left = 'auto';
+      dE.style.right = PAD + 'px';
+      dE.style.textAlign = 'right';
+    }
+
+    dSRect = dS.getBoundingClientRect();
+    dERect = dE.getBoundingClientRect();
+    if(dERect.left < dSRect.right + GAP){
+      var rowRect = datesRow.getBoundingClientRect();
+      var newLeftPx = (dSRect.right - rowRect.left) + GAP;
+      dE.style.right = 'auto';
+      dE.style.left = newLeftPx + 'px';
+      dE.style.textAlign = 'left';
+    }
+  }
+
+  function pad(n){ return n<10?'0'+n:''+n; }
+  function parseISO(s){ var p=s.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
+  function toISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function addDays(iso,n){ var d=parseISO(iso); d.setDate(d.getDate()+n); return toISO(d); }
+  function diffDays(a,b){ return Math.round((parseISO(b)-parseISO(a))/86400000); }
+  function fmtDay(iso){ return parseISO(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+  function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+  function initials(name){ var p=name.trim().split(/\s+/); return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase(); }
+
+  var teamSeq = 0, taskSeq = 0, subSeq = 0;
+  var team = [];
+
+  function T(label,color,subs,desc){ return {id:++taskSeq*0+colorSeqTaskId(), label:label, color:color, collapsed:false, description:desc||'', subtasks:subs}; }
+  var taskIdCounter = 0;
+  function colorSeqTaskId(){ taskIdCounter++; return taskIdCounter; }
+  function ST(label,start,end,assignees){ subSeq++; return {id:subSeq, label:label, start:start, end:end, assignees:assignees, status:'todo'}; }
+  var STATUS_ORDER = ['todo','inprogress','done'];
+  var STATUS_LABEL = {todo:'To-do', inprogress:'In progress', done:'Done'};
+  function statusIconSVG(status){
+    var box = '<rect x="2" y="2" width="12" height="12" rx="3" fill="none" stroke="#fff" stroke-width="1.6"/>';
+    var extra = '';
+    if(status==='inprogress') extra = '<line x1="4.5" y1="8" x2="11.5" y2="8" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>';
+    if(status==='done') extra = '<path d="M4.5 8.2 L7 10.6 L11.5 5.4" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+    return '<svg viewBox="0 0 16 16" width="16" height="16">'+box+extra+'</svg>';
+  }
+
+  var tasks = [];
+
+  var openPopover = null;
+  function closePopover(){
+    if(openPopover){
+      if(openPopover._cleanup) openPopover._cleanup();
+      if(openPopover.parentNode) openPopover.parentNode.removeChild(openPopover);
+    }
+    openPopover = null;
+  }
+  document.addEventListener('click', function(e){
+    if(openPopover && !openPopover.contains(e.target) && !e.target.closest('[data-popover-trigger]')) closePopover();
+  });
+
+  function planBounds(){ return { start: document.getElementById('plan-start').value, end: document.getElementById('plan-end').value }; }
+  function totalDays(){ var b = planBounds(); return Math.max(1, diffDays(b.start, b.end)); }
+
+  function renderStats(){
+    var b = planBounds();
+    document.getElementById('stat-start').textContent = fmtDay(b.start);
+    document.getElementById('stat-end').textContent = fmtDay(b.end);
+    document.getElementById('stat-days').textContent = totalDays();
+    document.title = document.getElementById('plan-title').value;
+
+    var totalSub = 0, sumPct = 0;
+    tasks.forEach(function(t){
+      t.subtasks.forEach(function(s){
+        totalSub++;
+        sumPct += (s.status==='done' ? 100 : (s.status==='inprogress' ? 50 : 0));
+      });
+    });
+    document.getElementById('stat-complete').textContent = (totalSub ? Math.round(sumPct/totalSub) : 0) + '%';
+  }
+
+  function renderSectionToggles(){
+    document.getElementById('team-chev').textContent = teamCollapsed ? '›' : '⌄';
+    document.getElementById('tasks-chev').textContent = tasksCollapsed ? '›' : '⌄';
+    document.getElementById('team-wrap').style.display = teamCollapsed ? 'none' : '';
+    document.getElementById('task-list').style.display = tasksCollapsed ? 'none' : '';
+  }
+
+  function personSubtasks(personId){
+    var out = [];
+    tasks.forEach(function(t){
+      t.subtasks.forEach(function(s){
+        if(s.assignees.indexOf(personId)>=0) out.push({taskLabel:t.label, taskColor:t.color, sub:s});
+      });
+    });
+    return out;
+  }
+
+  function renderTeam(){
+    var wrap = document.getElementById('team-wrap');
+    wrap.innerHTML = '';
+    team.forEach(function(person){
+      var card = document.createElement('div');
+      card.className = 'person-card';
+      card.style.border = '1.5px solid ' + PERSON_COLORS[person.color].fill;
+      card.draggable = true;
+      card.addEventListener('dragstart', function(ev){ draggedPerson = person.id; ev.dataTransfer.effectAllowed = 'move'; });
+      card.addEventListener('dragover', function(ev){ ev.preventDefault(); card.style.outline = '2px solid var(--text)'; });
+      card.addEventListener('dragleave', function(){ card.style.outline = ''; });
+      card.addEventListener('dragend', function(){ card.style.outline = ''; });
+      card.addEventListener('drop', function(ev){
+        ev.preventDefault();
+        card.style.outline = '';
+        if(draggedPerson===null || draggedPerson===person.id) return;
+        var fromIdx = team.findIndex(function(p){ return p.id===draggedPerson; });
+        var toIdx = team.findIndex(function(p){ return p.id===person.id; });
+        if(fromIdx<0 || toIdx<0) return;
+        var moved = team.splice(fromIdx,1)[0];
+        var rect = card.getBoundingClientRect();
+        var before = ev.clientY < rect.top + rect.height/2;
+        var newIdx = team.findIndex(function(p){ return p.id===person.id; });
+        team.splice(before?newIdx:newIdx+1, 0, moved);
+        draggedPerson = null;
+        renderAll();
+      });
+
+      var header = document.createElement('div');
+      header.className = 'person-header';
+
+      var grip = document.createElement('span');
+      grip.className = 'grip no-print'; grip.textContent = '⋮⋮';
+
+      var chev = document.createElement('span');
+      chev.className = 'chev-sm'; chev.textContent = person.collapsed ? '›' : '⌄';
+
+      var dot = document.createElement('span');
+      dot.className = 'color-dot'; dot.style.background = PERSON_COLORS[person.color].fill;
+      dot.style.width = '20px'; dot.style.height = '20px';
+      dot.style.display = 'flex'; dot.style.alignItems = 'center'; dot.style.justifyContent = 'center';
+      dot.style.color = '#fff'; dot.style.fontSize = '10px'; dot.style.fontWeight = '700';
+      dot.textContent = initials(person.name);
+      dot.setAttribute('data-popover-trigger','1');
+      dot.addEventListener('mouseenter', function(){
+        openSwatchPopover(PERSON_COLORS, personColorOrder, person.color, function(key){ person.color = key; }, dot, initials(person.name));
+      });
+      dot.addEventListener('click', function(e){ e.stopPropagation(); });
+
+      var nameInput = document.createElement('input');
+      nameInput.className = 'person-name'; nameInput.value = person.name;
+      nameInput.addEventListener('click', function(e){ e.stopPropagation(); });
+      nameInput.addEventListener('input', function(){ person.name = nameInput.value || 'Person'; });
+      wireCardFocus(nameInput, PERSON_COLORS[person.color].fill);
+
+      var mySubs = personSubtasks(person.id);
+      var count = document.createElement('span');
+      count.className = 'person-count';
+      count.textContent = mySubs.length + (mySubs.length===1 ? ' task' : ' tasks');
+
+      var del = document.createElement('button');
+      del.className = 'icon-btn no-print'; del.type='button'; del.textContent = '×';
+      del.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(team.length<=1) return;
+        team = team.filter(function(p){ return p.id!==person.id; });
+        tasks.forEach(function(t){ t.subtasks.forEach(function(s){ s.assignees = s.assignees.filter(function(a){ return a!==person.id; }); }); });
+        renderAll();
+      });
+
+      header.appendChild(grip); header.appendChild(chev); header.appendChild(dot); header.appendChild(nameInput);
+      header.appendChild(count); header.appendChild(del);
+      header.addEventListener('click', function(){ person.collapsed = !person.collapsed; renderAll(); });
+      card.appendChild(header);
+
+      if(!person.collapsed){
+        var rollup = document.createElement('div');
+        rollup.className = 'person-rollup';
+        if(mySubs.length){
+          mySubs.forEach(function(entry){
+            var item = document.createElement('div');
+            item.className = 'rollup-item';
+            item.style.background = COLORS[entry.taskColor].bg;
+            item.style.color = COLORS[entry.taskColor].text;
+
+            var label = document.createElement('span');
+            label.textContent = entry.taskLabel + ' — ' + entry.sub.label;
+            label.style.overflow = 'hidden'; label.style.textOverflow = 'ellipsis'; label.style.whiteSpace='nowrap';
+
+            var statusSel = document.createElement('select');
+            statusSel.className = 'status-select';
+            STATUS_ORDER.forEach(function(key){
+              var opt = document.createElement('option');
+              opt.value = key; opt.textContent = STATUS_LABEL[key];
+              if(entry.sub.status===key) opt.selected = true;
+              statusSel.appendChild(opt);
+            });
+            statusSel.addEventListener('click', function(e){ e.stopPropagation(); });
+            statusSel.addEventListener('change', function(){ entry.sub.status = statusSel.value; renderAll(); });
+
+            item.appendChild(label); item.appendChild(statusSel);
+            rollup.appendChild(item);
+          });
+        } else {
+          var empty = document.createElement('div');
+          empty.className = 'rollup-empty'; empty.textContent = 'No subtasks assigned yet.';
+          rollup.appendChild(empty);
+        }
+        card.appendChild(rollup);
+      }
+
+      wrap.appendChild(card);
+    });
+    var add = document.createElement('button');
+    add.className = 'btn no-print add-name-btn'; add.type='button'; add.textContent = '+ Add name';
+    add.addEventListener('click', function(){
+      teamSeq++;
+      var color = personColorOrder[team.length % personColorOrder.length];
+      team.push({id:teamSeq,name:'Person '+teamSeq,color:color,collapsed:false});
+      renderAll();
+    });
+    wrap.appendChild(add);
+  }
+
+  function personById(id){ return team.filter(function(p){ return p.id===id; })[0]; }
+
+  function renderAvatars(container, ids){
+    container.innerHTML = '';
+    var shown = ids.slice(0,4);
+    shown.forEach(function(id){
+      var p = personById(id);
+      if(!p) return;
+      var av = document.createElement('div');
+      av.className = 'avatar'; av.title = p.name;
+      av.style.background = PERSON_COLORS[p.color].fill;
+      av.textContent = initials(p.name);
+      container.appendChild(av);
+    });
+    if(ids.length>4){
+      var more = document.createElement('div');
+      more.className = 'avatar'; more.style.background = '#787774';
+      more.textContent = '+'+(ids.length-4);
+      container.appendChild(more);
+    }
+  }
+
+  function openSwatchPopover(palette, order, currentKey, onPick, anchorEl, letter){
+    closePopover();
+    var pop = document.createElement('div');
+    pop.className = 'popover';
+    var grid = document.createElement('div'); grid.className = 'swatch-grid';
+    order.forEach(function(key){
+      var sw = document.createElement('div');
+      sw.className = 'swatch' + (currentKey===key?' active':'');
+      sw.style.background = palette[key].fill;
+      if(letter) sw.textContent = letter;
+      sw.addEventListener('click', function(){ onPick(key); closePopover(); renderAll(); });
+      grid.appendChild(sw);
+    });
+    pop.appendChild(grid);
+    document.body.appendChild(pop);
+    var r = anchorEl.getBoundingClientRect();
+    pop.style.top = (window.scrollY + r.bottom) + 'px';
+    pop.style.left = (window.scrollX + r.left - 6) + 'px';
+    openPopover = pop;
+
+    // Instead of relying on mouseenter/mouseleave order between the dot and the
+    // popover (which races and closes mid-move on any diagonal or fast cursor
+    // path), treat the dot + popover + the gap between them as one continuous
+    // hoverable zone and check the live cursor position against it directly.
+    var closeTimer;
+    var PAD = 14;
+    function zoneRect(){
+      var a = anchorEl.getBoundingClientRect();
+      var p = pop.getBoundingClientRect();
+      return {
+        left: Math.min(a.left, p.left) - PAD,
+        right: Math.max(a.right, p.right) + PAD,
+        top: a.top - PAD,
+        bottom: p.bottom + PAD
+      };
+    }
+    function onMove(ev){
+      var z = zoneRect();
+      var inside = ev.clientX >= z.left && ev.clientX <= z.right && ev.clientY >= z.top && ev.clientY <= z.bottom;
+      clearTimeout(closeTimer);
+      if(!inside){ closeTimer = setTimeout(function(){ closePopover(); }, 300); }
+    }
+    document.addEventListener('mousemove', onMove);
+    pop._cleanup = function(){ document.removeEventListener('mousemove', onMove); clearTimeout(closeTimer); };
+  }
+
+  function openAssigneePopover(subtask, anchorEl){
+    closePopover();
+    var pop = document.createElement('div');
+    pop.className = 'popover assignee-list';
+    team.forEach(function(p){
+      var label = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.checked = subtask.assignees.indexOf(p.id)>=0;
+      cb.addEventListener('change', function(){
+        if(cb.checked){ if(subtask.assignees.indexOf(p.id)<0) subtask.assignees.push(p.id); }
+        else { subtask.assignees = subtask.assignees.filter(function(a){ return a!==p.id; }); }
+        renderAll();
+        setTimeout(function(){ openAssigneePopover(subtask, anchorEl); },0);
+      });
+      var av = document.createElement('span');
+      av.style.cssText = 'width:16px;height:16px;border-radius:50%;display:inline-block;background:'+PERSON_COLORS[p.color].fill+';color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600;';
+      av.textContent = initials(p.name);
+      label.appendChild(cb); label.appendChild(av);
+      label.appendChild(document.createTextNode(p.name));
+      pop.appendChild(label);
+    });
+    document.body.appendChild(pop);
+    var r = anchorEl.getBoundingClientRect();
+    pop.style.top = (window.scrollY + r.bottom + 4) + 'px';
+    pop.style.left = (window.scrollX + r.left) + 'px';
+    openPopover = pop;
+  }
+
+  function taskAssigneeRollup(task){
+    var seen = {}, out = [];
+    task.subtasks.forEach(function(s){ s.assignees.forEach(function(a){ if(!seen[a]){ seen[a]=1; out.push(a); } }); });
+    return out;
+  }
+
+  function setupPillDrag(pill, track, subtask, dS, dE, datesRow, cardEl, dateBadgeUpdate){
+    function startDrag(mode, ev, captureEl){
+      ev.preventDefault();
+      var b = planBounds();
+      var days = totalDays();
+      var rect = track.getBoundingClientRect();
+      var pxPerDay = rect.width / days;
+      var origStart = diffDays(b.start, subtask.start);
+      var origEnd = diffDays(b.start, subtask.end);
+      var startX = ev.clientX;
+      captureEl.setPointerCapture(ev.pointerId);
+
+      function onMove(mv){
+        var deltaDays = Math.round((mv.clientX - startX) / pxPerDay);
+        var ns = origStart, ne = origEnd;
+        if(mode==='start'){ ns = clamp(origStart+deltaDays, 0, origEnd); }
+        else if(mode==='end'){ ne = clamp(origEnd+deltaDays, origStart, days); }
+        else { var dur = origEnd-origStart; ns = clamp(origStart+deltaDays, 0, days-dur); ne = ns+dur; }
+        subtask.start = addDays(b.start, ns);
+        subtask.end = addDays(b.start, ne);
+        var left = (ns/days)*100, width = Math.max(((ne-ns)/days)*100, 2);
+        pill.style.left = left+'%'; pill.style.width = width+'%';
+        dS.textContent = fmtDay(subtask.start);
+        dE.textContent = fmtDay(subtask.end);
+        positionSubtaskDates(dS, dE, datesRow, cardEl, left, width);
+        if(dateBadgeUpdate) dateBadgeUpdate();
+      }
+      function onUp(up){
+        captureEl.releasePointerCapture(up.pointerId);
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+      }
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    }
+
+    pill.addEventListener('pointerdown', function(ev){
+      var pillRect = pill.getBoundingClientRect();
+      var offsetX = ev.clientX - pillRect.left;
+      var mode = offsetX < 10 ? 'start' : (offsetX > pillRect.width-10 ? 'end' : 'move');
+      startDrag(mode, ev, pill);
+    });
+    dS.addEventListener('pointerdown', function(ev){ startDrag('start', ev, dS); });
+    dE.addEventListener('pointerdown', function(ev){ startDrag('end', ev, dE); });
+  }
+
+  var draggedSub = null;
+  var draggedPerson = null;
+
+  function renderTasks(){
+    var list = document.getElementById('task-list');
+    list.innerHTML = '';
+    var b = planBounds();
+    var days = totalDays();
+    var labelJobs = [];
+
+    tasks.forEach(function(task){
+      var c = COLORS[task.color];
+      var card = document.createElement('div');
+      card.className = 'task-card';
+
+      var header = document.createElement('div');
+      header.className = 'task-header';
+
+      var chev = document.createElement('div');
+      chev.className = 'chev'; chev.textContent = task.collapsed ? '›' : '⌄';
+
+      var dot = document.createElement('div');
+      dot.className = 'color-dot'; dot.style.background = c.fill;
+      dot.setAttribute('data-popover-trigger','1');
+      dot.addEventListener('mouseenter', function(){
+        openSwatchPopover(COLORS, colorOrder, task.color, function(key){ task.color = key; }, dot);
+      });
+      dot.addEventListener('click', function(e){ e.stopPropagation(); });
+
+      var titleInput = document.createElement('input');
+      titleInput.className = 'task-title'; titleInput.value = task.label;
+      titleInput.addEventListener('click', function(e){ e.stopPropagation(); });
+      titleInput.addEventListener('input', function(){ task.label = titleInput.value; });
+      wireCardFocus(titleInput, c.fill);
+
+      var chipsMini = document.createElement('div');
+      chipsMini.className = 'chips-mini';
+      renderAvatars(chipsMini, taskAssigneeRollup(task));
+
+      var span = task.subtasks.length ? {
+        s: Math.min.apply(null, task.subtasks.map(function(s){ return diffDays(b.start,s.start); })),
+        e: Math.max.apply(null, task.subtasks.map(function(s){ return diffDays(b.start,s.end); }))
+      } : {s:0,e:0};
+      var badge = document.createElement('div');
+      badge.className = 'date-badge';
+      badge.style.background = c.bg; badge.style.color = c.text;
+      badge.textContent = task.subtasks.length ? (fmtDay(addDays(b.start,span.s))+' → '+fmtDay(addDays(b.start,span.e))) : 'No subtasks';
+
+      var actions = document.createElement('div');
+      actions.className = 'task-actions no-print';
+      var clearBtn = document.createElement('button');
+      clearBtn.className = 'btn subtle'; clearBtn.type='button'; clearBtn.textContent = 'Clear';
+      clearBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(task.subtasks.length && confirm('Clear all subtasks in "'+task.label+'"?')){ task.subtasks = []; renderAll(); }
+      });
+      var delBtn = document.createElement('button');
+      delBtn.className = 'btn subtle danger-text'; delBtn.type='button'; delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(confirm('Delete task "'+task.label+'" and all its subtasks?')){ tasks = tasks.filter(function(t){ return t.id!==task.id; }); renderAll(); }
+      });
+      actions.appendChild(clearBtn); actions.appendChild(delBtn);
+
+      header.appendChild(chev); header.appendChild(dot); header.appendChild(titleInput);
+      header.appendChild(chipsMini); header.appendChild(badge); header.appendChild(actions);
+      header.addEventListener('click', function(){ task.collapsed = !task.collapsed; renderAll(); });
+      card.appendChild(header);
+
+      if(!task.collapsed){
+        var body = document.createElement('div');
+        body.className = 'task-body';
+
+        var descLabel = document.createElement('div');
+        descLabel.className = 'desc-label'; descLabel.textContent = 'Description';
+        var desc = document.createElement('textarea');
+        desc.className = 'desc-box'; desc.placeholder = 'Goals, details, or notes about this task…';
+        desc.value = task.description; desc.rows = 2;
+        desc.addEventListener('input', function(){ task.description = desc.value; });
+        wireCardFocus(desc, c.fill);
+        body.appendChild(descLabel); body.appendChild(desc);
+
+        task.subtasks.forEach(function(st){
+          var row = document.createElement('div');
+          row.className = 'subtask-row';
+          row.draggable = true;
+          row.addEventListener('dragstart', function(ev){ draggedSub = st.id; ev.dataTransfer.effectAllowed='move'; });
+          row.addEventListener('dragover', function(ev){
+            ev.preventDefault();
+            var rect = row.getBoundingClientRect();
+            var mid = rect.top + rect.height/2;
+            row.classList.toggle('drag-over-top', ev.clientY < mid);
+            row.classList.toggle('drag-over-bottom', ev.clientY >= mid);
+          });
+          row.addEventListener('dragleave', function(){ row.classList.remove('drag-over-top','drag-over-bottom'); });
+          row.addEventListener('drop', function(ev){
+            ev.preventDefault();
+            row.classList.remove('drag-over-top','drag-over-bottom');
+            if(draggedSub===null || draggedSub===st.id) return;
+            var fromIdx = task.subtasks.findIndex(function(x){ return x.id===draggedSub; });
+            var toIdx = task.subtasks.findIndex(function(x){ return x.id===st.id; });
+            if(fromIdx<0||toIdx<0) return;
+            var moved = task.subtasks.splice(fromIdx,1)[0];
+            var rect = row.getBoundingClientRect();
+            var before = ev.clientY < rect.top + rect.height/2;
+            var newIdx = task.subtasks.findIndex(function(x){ return x.id===st.id; });
+            task.subtasks.splice(before?newIdx:newIdx+1, 0, moved);
+            draggedSub = null;
+            renderAll();
+          });
+
+          var line1 = document.createElement('div');
+          line1.className = 'sub-line1';
+          var grip = document.createElement('span'); grip.className = 'grip no-print'; grip.textContent = '⋮⋮';
+          var subTitle = document.createElement('input');
+          subTitle.className = 'sub-title'; subTitle.value = st.label;
+          subTitle.addEventListener('input', function(){ st.label = subTitle.value; });
+          wireCardFocus(subTitle, c.fill);
+          var assigneeTrigger = document.createElement('div');
+          assigneeTrigger.className = 'assignee-trigger';
+          assigneeTrigger.setAttribute('data-popover-trigger','1');
+          var avWrap = document.createElement('div'); avWrap.style.display='flex';
+          renderAvatars(avWrap, st.assignees);
+          if(!st.assignees.length){ var plus = document.createElement('span'); plus.style.cssText='font-size:12px;color:var(--text-muted);'; plus.textContent='+ assign'; avWrap.appendChild(plus); }
+          assigneeTrigger.appendChild(avWrap);
+          assigneeTrigger.addEventListener('click', function(e){ e.stopPropagation(); openAssigneePopover(st, assigneeTrigger); });
+          var delSub = document.createElement('button');
+          delSub.className = 'icon-btn no-print'; delSub.type='button'; delSub.textContent='×';
+          delSub.addEventListener('click', function(){ task.subtasks = task.subtasks.filter(function(x){ return x.id!==st.id; }); renderAll(); });
+
+          line1.appendChild(grip); line1.appendChild(subTitle); line1.appendChild(assigneeTrigger); line1.appendChild(delSub);
+
+          var track = document.createElement('div'); track.className = 'track';
+          var pill = document.createElement('div'); pill.className = 'pill'; pill.style.background = c.fill;
+          var s = diffDays(b.start, st.start), e = diffDays(b.start, st.end);
+          var leftPct = (s/days)*100, widthPct = Math.max(((e-s)/days)*100,2);
+          pill.style.left = leftPct+'%'; pill.style.width = widthPct+'%';
+
+          var statusIcon = document.createElement('span');
+          statusIcon.className = 'status-icon';
+          statusIcon.innerHTML = statusIconSVG(st.status);
+          statusIcon.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+          statusIcon.addEventListener('click', function(e){
+            e.stopPropagation();
+            var idx = STATUS_ORDER.indexOf(st.status);
+            st.status = STATUS_ORDER[(idx+1) % STATUS_ORDER.length];
+            renderAll();
+          });
+          pill.appendChild(statusIcon);
+
+          track.appendChild(pill);
+
+          var datesRow = document.createElement('div'); datesRow.className = 'pill-dates-row';
+          var dS = document.createElement('span'); dS.className = 'pill-date-label pill-date-start';
+          dS.textContent = fmtDay(st.start);
+          var dE = document.createElement('span'); dE.className = 'pill-date-label pill-date-end';
+          dE.textContent = fmtDay(st.end);
+          datesRow.appendChild(dS); datesRow.appendChild(dE);
+
+          labelJobs.push({dS:dS, dE:dE, datesRow:datesRow, card:track, leftPct:leftPct, widthPct:widthPct});
+
+          setupPillDrag(pill, track, st, dS, dE, datesRow, track, function(){
+            badge.textContent = fmtDay(addDays(b.start, Math.min.apply(null, task.subtasks.map(function(x){return diffDays(b.start,x.start);}))))
+              + ' → ' + fmtDay(addDays(b.start, Math.max.apply(null, task.subtasks.map(function(x){return diffDays(b.start,x.end);}))));
+          });
+
+          row.appendChild(line1); row.appendChild(track); row.appendChild(datesRow);
+          body.appendChild(row);
+        });
+
+        var addSub = document.createElement('button');
+        addSub.className = 'btn subtle no-print'; addSub.type='button'; addSub.textContent = '+ Add subtask';
+        addSub.addEventListener('click', function(){
+          task.subtasks.push(ST('New subtask', b.start, addDays(b.start,2), []));
+          renderAll();
+        });
+        body.appendChild(addSub);
+        card.appendChild(body);
+      }
+
+      list.appendChild(card);
+    });
+
+    labelJobs.forEach(function(job){
+      positionSubtaskDates(job.dS, job.dE, job.datesRow, job.card, job.leftPct, job.widthPct);
+    });
+  }
+
+  function renderAll(){
+    renderStats();
+    renderTeam();
+    renderTasks();
+    renderSectionToggles();
+  }
+
+  document.getElementById('plan-title').addEventListener('input', renderStats);
+  document.getElementById('plan-start').addEventListener('change', renderAll);
+  document.getElementById('plan-end').addEventListener('change', renderAll);
+  document.getElementById('team-toggle').addEventListener('click', function(){ teamCollapsed = !teamCollapsed; renderSectionToggles(); });
+  document.getElementById('tasks-toggle').addEventListener('click', function(){ tasksCollapsed = !tasksCollapsed; renderSectionToggles(); });
+
+  document.getElementById('add-task-btn').addEventListener('click', function(){
+    var color = colorOrder[tasks.length % colorOrder.length];
+    var b = planBounds();
+    tasks.push({ id: ++taskIdCounter, label:'New task', color:color, collapsed:false, description:'', subtasks:[ST('New subtask', b.start, addDays(b.start,2), [])] });
+    renderAll();
+  });
+
+  document.getElementById('copy-btn').addEventListener('click', function(){
+    var lines = [document.getElementById('plan-title').value];
+    var b = planBounds();
+    lines.push('Plan: '+fmtDay(b.start)+' to '+fmtDay(b.end));
+    tasks.forEach(function(t){
+      lines.push(''); lines.push(t.label.toUpperCase());
+      if(t.description) lines.push('  ('+t.description+')');
+      t.subtasks.forEach(function(st){
+        var names = st.assignees.map(function(id){ var p=personById(id); return p?p.name:null; }).filter(Boolean);
+        lines.push('- ['+(names.length?names.join(' + '):'Unassigned')+'] '+st.label+' ('+fmtDay(st.start)+' to '+fmtDay(st.end)+')');
+      });
+    });
+    var text = lines.join('\n');
+    if(navigator.clipboard) navigator.clipboard.writeText(text);
+    var btn = document.getElementById('copy-btn');
+    var origHTML = btn.innerHTML; var origTitle = btn.title;
+    btn.innerHTML = '<svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-8.5"/></svg>';
+    btn.title = 'Copied';
+    setTimeout(function(){ btn.innerHTML = origHTML; btn.title = origTitle; }, 1200);
+  });
+
+function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'').toLowerCase() || 'card'; }
+
+  function buildExportCard(title, c, lines){
+    var card = document.createElement('div');
+    card.style.cssText = 'width:520px; background:#FFFFFF; border:1.5px solid '+c.fill+'; border-radius:12px; padding:20px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:#37352F;';
+    var head = document.createElement('div');
+    head.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:14px;';
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:14px; height:14px; border-radius:50%; background:'+c.fill+'; flex-shrink:0;';
+    var h = document.createElement('div'); h.style.cssText = 'font-size:18px; font-weight:700;'; h.textContent = title;
+    head.appendChild(dot); head.appendChild(h);
+    card.appendChild(head);
+    if(!lines.length){
+      var empty = document.createElement('div');
+      empty.style.cssText = 'font-size:13px; color:#9B9A97;'; empty.textContent = 'No subtasks.';
+      card.appendChild(empty);
+    } else {
+      lines.forEach(function(line){
+        var rowColor = line.color || c;
+        var row = document.createElement('div');
+        row.style.cssText = 'font-size:13px; padding:9px 11px; border-radius:6px; background:'+rowColor.bg+'; color:'+rowColor.text+'; margin-bottom:6px; display:flex; justify-content:space-between; gap:10px; align-items:center;';
+        var t = document.createElement('span'); t.textContent = line.text;
+        var s = document.createElement('span'); s.style.cssText = 'font-weight:600; font-size:11px; white-space:nowrap; flex-shrink:0;'; s.textContent = STATUS_LABEL[line.status];
+        row.appendChild(t); row.appendChild(s);
+        card.appendChild(row);
+      });
+    }
+    return card;
+  }
+
+  document.getElementById('cards-btn').addEventListener('click', function(){
+    var btn = this; var origTitle = btn.title;
+    btn.title = 'Building…'; btn.disabled = true;
+
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute; left:-10000px; top:0;';
+    document.body.appendChild(container);
+
+    var jobs = [];
+    tasks.forEach(function(t){
+      var lines = t.subtasks.map(function(s){
+        var names = s.assignees.map(function(id){ var p=personById(id); return p?p.name:null; }).filter(Boolean).join(' + ') || 'Unassigned';
+        return {text: s.label+' ('+names+') · '+fmtDay(s.start)+' – '+fmtDay(s.end), status: s.status};
+      });
+      var card = buildExportCard(t.label, COLORS[t.color], lines);
+      container.appendChild(card);
+      jobs.push({el:card, name: safeFileName(t.label)+'.png'});
+    });
+    team.forEach(function(p){
+      var lines = personSubtasks(p.id).map(function(entry){
+        return {text: entry.taskLabel+' — '+entry.sub.label+' · '+fmtDay(entry.sub.start)+' – '+fmtDay(entry.sub.end), status: entry.sub.status, color: COLORS[entry.taskColor]};
+      });
+      var card = buildExportCard(p.name, PERSON_COLORS[p.color], lines);
+      container.appendChild(card);
+      jobs.push({el:card, name: safeFileName(p.name)+'.png'});
+    });
+
+    var zip = new JSZip();
+    var chain = Promise.resolve();
+    jobs.forEach(function(job){
+      chain = chain.then(function(){
+        return html2canvas(job.el, {backgroundColor:'#FFFFFF', scale:2}).then(function(canvas){
+          return new Promise(function(resolve){
+            canvas.toBlob(function(blob){ zip.file(job.name, blob); resolve(); }, 'image/png');
+          });
+        });
+      });
+    });
+    chain.then(function(){
+      document.body.removeChild(container);
+      return zip.generateAsync({type:'blob'});
+    }).then(function(blob){
+      var link = document.createElement('a');
+      link.download = 'event-cards.zip';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      btn.title = origTitle; btn.disabled = false;
+    });
+  });
+
+  function serializeState(){
+    return {
+      planTitle: document.getElementById('plan-title').value,
+      planStart: document.getElementById('plan-start').value,
+      planEnd: document.getElementById('plan-end').value,
+      team: team,
+      tasks: tasks
+    };
+  }
+
+  function loadState(obj){
+    document.getElementById('plan-title').value = obj.planTitle || 'Event setup plan';
+    document.getElementById('plan-start').value = obj.planStart || '2026-07-10';
+    document.getElementById('plan-end').value = obj.planEnd || '2026-08-16';
+    team = obj.team || [];
+    tasks = obj.tasks || [];
+    team.forEach(function(p){ if(typeof p.collapsed !== 'boolean') p.collapsed = false; if(!p.color) p.color = personColorOrder[0]; });
+    tasks.forEach(function(t){
+      if(typeof t.collapsed !== 'boolean') t.collapsed = false;
+      if(!t.description) t.description = '';
+      (t.subtasks || []).forEach(function(s){ if(!s.status) s.status = 'todo'; if(!s.assignees) s.assignees = []; });
+    });
+    teamSeq = team.reduce(function(m,p){ return Math.max(m,p.id); }, 0);
+    taskIdCounter = tasks.reduce(function(m,t){ return Math.max(m,t.id); }, 0);
+    subSeq = tasks.reduce(function(m,t){ return (t.subtasks||[]).reduce(function(mm,s){ return Math.max(mm,s.id); }, m); }, 0);
+    renderAll();
+  }
+
+  document.getElementById('save-plan-btn').addEventListener('click', function(){
+    var data = JSON.stringify(serializeState(), null, 2);
+    var blob = new Blob([data], {type:'application/json'});
+    var link = document.createElement('a');
+    link.download = safeFileName(document.getElementById('plan-title').value || 'plan') + '.json';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  });
+
+  document.getElementById('load-plan-btn').addEventListener('click', function(){
+    document.getElementById('load-plan-input').click();
+  });
+
+  document.getElementById('load-plan-input').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      try {
+        var obj = JSON.parse(evt.target.result);
+        loadState(obj);
+      } catch(err){
+        alert('Could not load this file — it may not be a valid saved plan.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
