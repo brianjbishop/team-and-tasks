@@ -2,7 +2,7 @@
 
 A single-file, no-install team planning tool: a Notion-style Gantt chart for tracking who is doing what and by when. The name is the idea. tnt is the small charge that gets a stuck project moving, the dynamite that turns a pile of tasks and a loose team into something that actually ships.
 
-Open index.html in any browser, nothing to build, nothing to install. Or use the live version via GitHub Pages once it is enabled on this repo.
+Open tnt.html in any browser, nothing to build, nothing to install. Or use the live version via GitHub Pages once it is enabled on this repo.
 
 ## Features
 
@@ -15,6 +15,10 @@ Built for coordinating a small event setup team across a handful of workstreams,
 ## Development history
 
 This tool went through three real stages, reflected in the commit history. First, a prototype: a flat task list grouped by category, with a pair of range sliders per row to set start and end dates. Second, a task and subtask hierarchy: restructured into collapsible task cards containing addable and editable subtasks, with a dynamic team list. Third, the current version: a full redesign with draggable timeline pills instead of sliders, multi person assignment with team level rollups, status tracking, per person and per task color coding, and Gantt-style card export.
+
+## Where this is headed
+
+Next up under consideration: a chat interface inside the tool itself where you describe an event or project in plain language and it drafts the team and task/subtask structure for you, the way an exploded-view diagram in an assembly manual gives you a first draft of how the pieces fit together before you start turning screws. You'd still edit everything by hand afterward — the goal is skipping the blank-page problem, not automating the planning itself.
 
 ## License
 
