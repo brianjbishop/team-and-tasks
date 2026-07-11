@@ -133,13 +133,10 @@
     </div>
   </div>
 
-  <div class="section-label" style="margin-top:24px;">Save &amp; load</div>
+  <div class="section-label" style="margin-top:24px;">Save &amp; share</div>
   <div class="icon-toolbar no-print">
-    <button class="icon-toolbar-btn" id="save-plan-btn" title="Save plan (.json)">
+    <button class="icon-toolbar-btn" id="save-plan-btn" title="Save a copy (.html)">
       <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v9"/><path d="M6.5 8.5L10 12l3.5-3.5"/><path d="M4 14.5v1a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
-    </button>
-    <button class="icon-toolbar-btn" id="load-plan-btn" title="Load plan (.json)">
-      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12V3"/><path d="M6.5 6.5L10 3l3.5 3.5"/><path d="M4 14.5v1a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
     </button>
     <button class="icon-toolbar-btn" id="copy-btn" title="Copy plan as text">
       <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="9" height="9" rx="1.5"/><path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-7A1.5 1.5 0 0 0 3 5.5v7A1.5 1.5 0 0 0 4.5 14H6"/></svg>
@@ -147,10 +144,10 @@
     <button class="icon-toolbar-btn" id="cards-btn" title="Save images (.zip)">
       <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="12" rx="1.5"/><circle cx="7.5" cy="8.5" r="1.25"/><path d="M17 13l-4-4-5 5"/></svg>
     </button>
-    <input type="file" id="load-plan-input" accept="application/json" style="display:none">
   </div>
 </div>
 
+<script type="application/json" id="initial-data">{}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
@@ -237,10 +234,15 @@
   function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
   function initials(name){ var p=name.trim().split(/\s+/); return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase(); }
 
-  var teamSeq = 0, taskSeq = 0, subSeq = 0;
-  var team = [];
+  var __initial = {};
+  try { __initial = JSON.parse((document.getElementById('initial-data')||{}).textContent || '{}'); } catch(e){ __initial = {}; }
 
-  function T(label,color,subs,desc){ return {id:++taskSeq*0+colorSeqTaskId(), label:label, color:color, collapsed:false, description:desc||'', subtasks:subs}; }
+  var subSeq = 0;
+  var team = __initial.team || [];
+  team.forEach(function(p){ if(typeof p.collapsed !== 'boolean') p.collapsed = false; if(!p.color) p.color = personColorOrder[0]; });
+  var teamSeq = team.reduce(function(m,p){ return Math.max(m,p.id); }, 0);
+
+  function T(label,color,subs,desc){ return {id:colorSeqTaskId(), label:label, color:color, collapsed:false, description:desc||'', subtasks:subs}; }
   var taskIdCounter = 0;
   function colorSeqTaskId(){ taskIdCounter++; return taskIdCounter; }
   function ST(label,start,end,assignees){ subSeq++; return {id:subSeq, label:label, start:start, end:end, assignees:assignees, status:'todo'}; }
@@ -254,7 +256,14 @@
     return '<svg viewBox="0 0 16 16" width="16" height="16">'+box+extra+'</svg>';
   }
 
-  var tasks = [];
+  var tasks = __initial.tasks || [];
+  tasks.forEach(function(t){
+    if(typeof t.collapsed !== 'boolean') t.collapsed = false;
+    if(!t.description) t.description = '';
+    (t.subtasks || []).forEach(function(s){ if(!s.status) s.status = 'todo'; if(!s.assignees) s.assignees = []; });
+  });
+  taskIdCounter = tasks.reduce(function(m,t){ return Math.max(m,t.id); }, 0);
+  subSeq = tasks.reduce(function(m,t){ return (t.subtasks||[]).reduce(function(mm,s){ return Math.max(mm,s.id); }, m); }, subSeq);
 
   var openPopover = null;
   function closePopover(){
@@ -808,56 +817,68 @@
 
 function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'').toLowerCase() || 'card'; }
 
-  function buildExportCard(title, c, lines){
+  function buildExportCard(title, c, lines, planStart, planEnd){
+    var totalDays = Math.max(1, diffDays(planStart, planEnd));
     var card = document.createElement('div');
-    card.style.cssText = 'width:520px; background:#FFFFFF; border:1.5px solid '+c.fill+'; border-radius:12px; padding:20px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:#37352F;';
+    card.style.cssText = 'width:560px; background:#FFFFFF; border:1.5px solid '+c.fill+'; border-radius:12px; padding:20px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:#37352F;';
     var head = document.createElement('div');
-    head.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:16px;';
+    head.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:6px;';
     var dot = document.createElement('div');
     dot.style.cssText = 'width:14px; height:14px; border-radius:50%; background:'+c.fill+'; flex-shrink:0;';
     var h = document.createElement('div'); h.style.cssText = 'font-size:18px; font-weight:700;'; h.textContent = title;
     head.appendChild(dot); head.appendChild(h);
     card.appendChild(head);
+
     if(!lines.length){
       var empty = document.createElement('div');
-      empty.style.cssText = 'font-size:13px; color:#9B9A97;'; empty.textContent = 'No subtasks.';
+      empty.style.cssText = 'font-size:13px; color:#9B9A97; margin-top:10px;'; empty.textContent = 'No subtasks.';
       card.appendChild(empty);
-    } else {
-      lines.forEach(function(line){
-        var rowColor = line.color || c;
-        var row = document.createElement('div');
-        row.style.cssText = 'margin-bottom:12px;';
-
-        var label = document.createElement('div');
-        label.style.cssText = 'font-size:13px; color:#37352F; margin-bottom:5px; padding:0 1px;';
-        label.textContent = line.label;
-        row.appendChild(label);
-
-        var pillTrack = document.createElement('div');
-        pillTrack.style.cssText = 'position:relative; height:30px; background:#F7F7F5; border:1px solid #E9E9E7; border-radius:8px; padding:2px;';
-        var pill = document.createElement('div');
-        pill.style.cssText = 'height:24px; border-radius:6px; background:'+rowColor.fill+'; box-shadow:0 1px 2px rgba(15,15,15,0.08); display:flex; align-items:center; justify-content:space-between; padding:0 8px; gap:8px;';
-
-        var iconWrap = document.createElement('span');
-        iconWrap.style.cssText = 'display:flex; align-items:center; justify-content:center; flex-shrink:0;';
-        iconWrap.innerHTML = statusIconSVG(line.status);
-        pill.appendChild(iconWrap);
-
-        var dateText = document.createElement('span');
-        dateText.style.cssText = 'font-size:11px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
-        dateText.textContent = fmtDay(line.start)+' – '+fmtDay(line.end);
-        pill.appendChild(dateText);
-
-        var statusChip = document.createElement('span');
-        statusChip.style.cssText = 'font-size:10px; font-weight:700; color:#fff; opacity:0.9; white-space:nowrap; flex-shrink:0;';
-        statusChip.textContent = STATUS_LABEL[line.status];
-        pill.appendChild(statusChip);
-
-        pillTrack.appendChild(pill);
-        row.appendChild(pillTrack);
-        card.appendChild(row);
-      });
+      return card;
     }
+
+    var axis = document.createElement('div');
+    axis.style.cssText = 'display:flex; justify-content:space-between; font-size:10px; font-weight:600; color:#9B9A97; text-transform:uppercase; letter-spacing:.03em; margin:10px 1px 6px;';
+    axis.innerHTML = '<span>'+fmtDay(planStart)+'</span><span>'+fmtDay(planEnd)+'</span>';
+    card.appendChild(axis);
+
+    lines.forEach(function(line){
+      var rowColor = line.color || c;
+      var row = document.createElement('div');
+      row.style.cssText = 'margin-bottom:16px;';
+
+      var label = document.createElement('div');
+      label.style.cssText = 'font-size:12.5px; color:#37352F; margin-bottom:5px; padding:0 1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+      label.textContent = line.label;
+      row.appendChild(label);
+
+      var track = document.createElement('div');
+      track.style.cssText = 'position:relative; height:28px; background:#F7F7F5; border:1px solid #E9E9E7; border-radius:6px;';
+
+      var s = diffDays(planStart, line.start), e = diffDays(planStart, line.end);
+      var leftPct = clamp((s/totalDays)*100, 0, 100);
+      var widthPct = Math.max(((e-s)/totalDays)*100, 6);
+      if(leftPct + widthPct > 100) widthPct = 100 - leftPct;
+
+      var pill = document.createElement('div');
+      pill.style.cssText = 'position:absolute; top:2px; left:'+leftPct+'%; width:'+widthPct+'%; height:24px; border-radius:5px; background:'+rowColor.fill+'; box-shadow:0 1px 2px rgba(15,15,15,0.1); display:flex; align-items:center; justify-content:center;';
+      pill.innerHTML = statusIconSVG(line.status);
+      track.appendChild(pill);
+      row.appendChild(track);
+
+      var caption = document.createElement('div');
+      caption.style.cssText = 'position:relative; height:13px; margin-top:4px; font-size:10.5px; color:#9B9A97;';
+      var span = document.createElement('span');
+      span.style.cssText = 'position:absolute; white-space:nowrap;';
+      span.textContent = fmtDay(line.start)+' – '+fmtDay(line.end)+' · '+STATUS_LABEL[line.status];
+      var mid = leftPct + widthPct/2;
+      if(mid < 18){ span.style.left = '0'; }
+      else if(mid > 82){ span.style.right = '0'; }
+      else { span.style.left = mid+'%'; span.style.transform = 'translateX(-50%)'; }
+      caption.appendChild(span);
+      row.appendChild(caption);
+
+      card.appendChild(row);
+    });
     return card;
   }
 
@@ -869,13 +890,14 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
     container.style.cssText = 'position:absolute; left:-10000px; top:0;';
     document.body.appendChild(container);
 
+    var b = planBounds();
     var jobs = [];
     tasks.forEach(function(t){
       var lines = t.subtasks.map(function(s){
         var names = s.assignees.map(function(id){ var p=personById(id); return p?p.name:null; }).filter(Boolean).join(' + ') || 'Unassigned';
         return {label: s.label+' ('+names+')', start: s.start, end: s.end, status: s.status};
       });
-      var card = buildExportCard(t.label, COLORS[t.color], lines);
+      var card = buildExportCard(t.label, COLORS[t.color], lines, b.start, b.end);
       container.appendChild(card);
       jobs.push({el:card, name: safeFileName(t.label)+'.png'});
     });
@@ -883,7 +905,7 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
       var lines = personSubtasks(p.id).map(function(entry){
         return {label: entry.taskLabel+' — '+entry.sub.label, start: entry.sub.start, end: entry.sub.end, status: entry.sub.status, color: COLORS[entry.taskColor]};
       });
-      var card = buildExportCard(p.name, PERSON_COLORS[p.color], lines);
+      var card = buildExportCard(p.name, PERSON_COLORS[p.color], lines, b.start, b.end);
       container.appendChild(card);
       jobs.push({el:card, name: safeFileName(p.name)+'.png'});
     });
@@ -921,52 +943,19 @@ function safeFileName(s){ return (s||'').replace(/[^a-z0-9]+/gi,'-').replace(/^-
     };
   }
 
-  function loadState(obj){
-    document.getElementById('plan-title').value = obj.planTitle || 'Event setup plan';
-    document.getElementById('plan-start').value = obj.planStart || '2026-07-10';
-    document.getElementById('plan-end').value = obj.planEnd || '2026-08-16';
-    team = obj.team || [];
-    tasks = obj.tasks || [];
-    team.forEach(function(p){ if(typeof p.collapsed !== 'boolean') p.collapsed = false; if(!p.color) p.color = personColorOrder[0]; });
-    tasks.forEach(function(t){
-      if(typeof t.collapsed !== 'boolean') t.collapsed = false;
-      if(!t.description) t.description = '';
-      (t.subtasks || []).forEach(function(s){ if(!s.status) s.status = 'todo'; if(!s.assignees) s.assignees = []; });
-    });
-    teamSeq = team.reduce(function(m,p){ return Math.max(m,p.id); }, 0);
-    taskIdCounter = tasks.reduce(function(m,t){ return Math.max(m,t.id); }, 0);
-    subSeq = tasks.reduce(function(m,t){ return (t.subtasks||[]).reduce(function(mm,s){ return Math.max(mm,s.id); }, m); }, 0);
-    renderAll();
-  }
-
   document.getElementById('save-plan-btn').addEventListener('click', function(){
-    var data = JSON.stringify(serializeState(), null, 2);
-    var blob = new Blob([data], {type:'application/json'});
+    document.getElementById('initial-data').textContent = JSON.stringify(serializeState());
+    var html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    var blob = new Blob([html], {type:'text/html'});
     var link = document.createElement('a');
-    link.download = safeFileName(document.getElementById('plan-title').value || 'plan') + '.json';
+    link.download = safeFileName(document.getElementById('plan-title').value || 'plan') + '-tnt.html';
     link.href = URL.createObjectURL(blob);
     link.click();
   });
 
-  document.getElementById('load-plan-btn').addEventListener('click', function(){
-    document.getElementById('load-plan-input').click();
-  });
-
-  document.getElementById('load-plan-input').addEventListener('change', function(e){
-    var file = e.target.files[0];
-    if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(evt){
-      try {
-        var obj = JSON.parse(evt.target.result);
-        loadState(obj);
-      } catch(err){
-        alert('Could not load this file — it may not be a valid saved plan.');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  });
+  if(__initial.planTitle) document.getElementById('plan-title').value = __initial.planTitle;
+  if(__initial.planStart) document.getElementById('plan-start').value = __initial.planStart;
+  if(__initial.planEnd) document.getElementById('plan-end').value = __initial.planEnd;
 
   renderAll();
 })();
