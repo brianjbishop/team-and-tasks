@@ -6,7 +6,7 @@ Open index.html in any browser, nothing to build, nothing to install. Or use the
 
 ## Features
 
-A task to subtask hierarchy with collapsible groups. Draggable timeline pills, where you can drag either edge to resize, drag the middle to move, or drag the date labels directly. Multi person assignment per subtask, rolled up to the task level. Per task and per person color coding, with a hover triggered color picker. A dedicated Team section where each person expands into a rollup of everything they are responsible for. Status tracking, to do, in progress, or done, that cycles from a click on the timeline pill, with a live percent complete stat. Drag and drop reordering for both subtasks and team members. Save and Load a plan as JSON, so state including colors and status round trips exactly. Copy the plan as plain text, or export every task and person as a PNG card bundled into a zip.
+A task to subtask hierarchy with collapsible groups. Draggable timeline pills, where you can drag either edge to resize, drag the middle to move, or drag the date labels directly. Multi person assignment per subtask, rolled up to the task level. Per task and per person color coding, with a hover triggered color picker. A dedicated Team section where each person expands into a rollup of everything they are responsible for. Status tracking, to do, in progress, or done, that cycles from a click on the timeline pill, with a live percent complete stat. Drag and drop reordering for both subtasks and team members. Save a snapshot as a standalone HTML file with the current state baked in, so sharing a plan is just sending that one file. Copy the plan as plain text, or export every task and person as a Gantt-style PNG card bundled into a zip.
 
 ## Why
 
@@ -14,7 +14,7 @@ Built for coordinating a small event setup team across a handful of workstreams,
 
 ## Development history
 
-This tool went through three real stages, reflected in the commit history. First, a prototype: a flat task list grouped by category, with a pair of range sliders per row to set start and end dates. Second, a task and subtask hierarchy: restructured into collapsible task cards containing addable and editable subtasks, with a dynamic team list. Third, the current version: a full redesign with draggable timeline pills instead of sliders, multi person assignment with team level rollups, status tracking, per person and per task color coding, save and load, and export to card images.
+This tool went through three real stages, reflected in the commit history. First, a prototype: a flat task list grouped by category, with a pair of range sliders per row to set start and end dates. Second, a task and subtask hierarchy: restructured into collapsible task cards containing addable and editable subtasks, with a dynamic team list. Third, the current version: a full redesign with draggable timeline pills instead of sliders, multi person assignment with team level rollups, status tracking, per person and per task color coding, and Gantt-style card export.
 
 ## License
 
