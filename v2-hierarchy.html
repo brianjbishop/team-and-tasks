@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Event setup plan</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:#f7f7f5; margin:0; padding:32px; color:#37352f;}
+  h1{font-size:24px; margin-bottom:16px;}
+  .team{display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap;}
+  .team input{border:1px solid #e0e0dc; border-radius:16px; padding:5px 12px; font-size:13px;}
+  .team button{border:1px dashed #ccc; border-radius:16px; background:#fff; padding:5px 12px; font-size:13px; cursor:pointer;}
+  .task-card{background:#fff; border:1px solid #eaeaea; border-radius:10px; margin-bottom:10px; box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .task-header{display:flex; align-items:center; gap:8px; padding:12px 14px; cursor:pointer;}
+  .task-header .chev{color:#999; width:12px;}
+  .task-header input{flex:1; border:none; font-size:15px; font-weight:600; background:transparent;}
+  .task-header .add-sub, .task-header .del{border:none; background:transparent; color:#999; cursor:pointer; font-size:13px;}
+  .subtasks{padding:0 14px 12px 34px;}
+  .subtask{display:flex; align-items:center; gap:10px; padding:6px 0;}
+  .subtask input[type=text]{flex:1; border:none; background:transparent; font-size:13px;}
+  .subtask select{font-size:12px; border:1px solid #eee; border-radius:4px;}
+  .subtask input[type=range]{width:90px;}
+  .add-task, .copy-btn{margin-top:10px; padding:8px 14px; border:1px solid #ddd; border-radius:6px; background:#fff; cursor:pointer; font-size:13px;}
+</style>
+</head>
+<body>
+  <h1>Event setup plan</h1>
+  <div class="team" id="team"></div>
+  <div id="list"></div>
+  <button class="add-task" id="add-task-btn">+ Add task</button>
+  <button class="copy-btn" id="copy-btn">Copy plan as text</button>
+
+<script>
+// Second pass: restructure the flat list into a real Task -> Subtask hierarchy.
+// Tasks collapse/expand, both tasks and subtasks are addable/editable/deletable,
+// and team members are now a dynamic, addable/removable list rather than 4 fixed
+// slots. Subtask date editing is still two range sliders (the pixel-drag pill
+// comes in the next redesign pass).
+var teamSeq = 4, taskSeq = 5, subSeq = 21;
+var team = [
+  { id: 1, name: 'TBD 1' }, { id: 2, name: 'TBD 2' },
+  { id: 3, name: 'TBD 3' }, { id: 4, name: 'TBD 4' },
+];
+var totalDays = 30;
+
+function ST(label, s, e, assignee){ subSeq++; return { id: subSeq, label: label, s: s, e: e, assignee: assignee }; }
+
+var tasks = [
+  { id: 1, label: 'Venue', collapsed: false, subtasks: [
+    ST('Outreach to candidate venues', 0, 3, 1),
+    ST('Hold NYU Garage as backup', 0, 5, 1),
+    ST('Collect and compare quotes', 4, 8, 2),
+  ]},
+  { id: 2, label: 'Program and content', collapsed: false, subtasks: [
+    ST('Build film shortlist', 4, 14, 3),
+    ST('Confirm program order', 14, 20, 1),
+  ]},
+  { id: 3, label: 'Audience and guests', collapsed: false, subtasks: [
+    ST('Determine audience profiles', 3, 9, 4),
+  ]},
+  { id: 4, label: 'Marketing and assets', collapsed: false, subtasks: [
+    ST('Design marketing assets', 6, 16, 2),
+  ]},
+  { id: 5, label: 'Logistics and day-of', collapsed: false, subtasks: [
+    ST('Assign day-of roles', 20, 25, 1),
+  ]},
+];
+
+function personById(id){ return team.filter(function(p){ return p.id === id; })[0]; }
+
+function renderTeam(){
+  var wrap = document.getElementById('team');
+  wrap.innerHTML = '';
+  team.forEach(function(p){
+    var input = document.createElement('input');
+    input.value = p.name;
+    input.addEventListener('input', function(){ p.name = input.value; render(); });
+    wrap.appendChild(input);
+  });
+  var add = document.createElement('button');
+  add.textContent = '+ Add name';
+  add.addEventListener('click', function(){ teamSeq++; team.push({ id: teamSeq, name: 'Person ' + teamSeq }); render(); });
+  wrap.appendChild(add);
+}
+
+function render(){
+  renderTeam();
+  var list = document.getElementById('list');
+  list.innerHTML = '';
+  tasks.forEach(function(task){
+    var card = document.createElement('div');
+    card.className = 'task-card';
+
+    var header = document.createElement('div');
+    header.className = 'task-header';
+    var chev = document.createElement('span');
+    chev.className = 'chev'; chev.textContent = task.collapsed ? '›' : '⌄';
+    var titleInput = document.createElement('input');
+    titleInput.value = task.label;
+    titleInput.addEventListener('click', function(e){ e.stopPropagation(); });
+    titleInput.addEventListener('input', function(){ task.label = titleInput.value; });
+    var addSub = document.createElement('button');
+    addSub.className = 'add-sub'; addSub.textContent = '+ subtask';
+    addSub.addEventListener('click', function(e){
+      e.stopPropagation();
+      task.subtasks.push(ST('New subtask', 0, 3, team[0] ? team[0].id : null));
+      render();
+    });
+    var del = document.createElement('button');
+    del.className = 'del'; del.textContent = '×';
+    del.addEventListener('click', function(e){
+      e.stopPropagation();
+      tasks = tasks.filter(function(t){ return t.id !== task.id; });
+      render();
+    });
+    header.appendChild(chev); header.appendChild(titleInput); header.appendChild(addSub); header.appendChild(del);
+    header.addEventListener('click', function(){ task.collapsed = !task.collapsed; render(); });
+    card.appendChild(header);
+
+    if(!task.collapsed){
+      var body = document.createElement('div');
+      body.className = 'subtasks';
+      task.subtasks.forEach(function(st){
+        var row = document.createElement('div');
+        row.className = 'subtask';
+
+        var label = document.createElement('input');
+        label.type = 'text'; label.value = st.label;
+        label.addEventListener('input', function(){ st.label = label.value; });
+
+        var select = document.createElement('select');
+        team.forEach(function(p){
+          var opt = document.createElement('option');
+          opt.value = p.id; opt.textContent = p.name;
+          if(p.id === st.assignee) opt.selected = true;
+          select.appendChild(opt);
+        });
+        select.addEventListener('change', function(){ st.assignee = Number(select.value); });
+
+        var startSlider = document.createElement('input');
+        startSlider.type = 'range'; startSlider.min = 0; startSlider.max = totalDays; startSlider.value = st.s;
+        startSlider.addEventListener('input', function(){ st.s = Math.min(Number(startSlider.value), st.e); });
+        var endSlider = document.createElement('input');
+        endSlider.type = 'range'; endSlider.min = 0; endSlider.max = totalDays; endSlider.value = st.e;
+        endSlider.addEventListener('input', function(){ st.e = Math.max(Number(endSlider.value), st.s); });
+
+        var delSub = document.createElement('button');
+        delSub.textContent = '×';
+        delSub.style.cssText = 'border:none;background:transparent;color:#bbb;cursor:pointer;';
+        delSub.addEventListener('click', function(){ task.subtasks = task.subtasks.filter(function(x){ return x.id !== st.id; }); render(); });
+
+        row.appendChild(label); row.appendChild(select); row.appendChild(startSlider); row.appendChild(endSlider); row.appendChild(delSub);
+        body.appendChild(row);
+      });
+      card.appendChild(body);
+    }
+
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('add-task-btn').addEventListener('click', function(){
+  taskSeq++;
+  tasks.push({ id: taskSeq, label: 'New task', collapsed: false, subtasks: [] });
+  render();
+});
+
+document.getElementById('copy-btn').addEventListener('click', function(){
+  var lines = [];
+  tasks.forEach(function(t){
+    lines.push(''); lines.push(t.label.toUpperCase());
+    t.subtasks.forEach(function(st){
+      var p = personById(st.assignee);
+      lines.push('- [' + (p ? p.name : 'Unassigned') + '] ' + st.label + ' (day ' + st.s + ' to ' + st.e + ')');
+    });
+  });
+  if(navigator.clipboard) navigator.clipboard.writeText(lines.join('\n'));
+});
+
+render();
+</script>
+</body>
+</html>
